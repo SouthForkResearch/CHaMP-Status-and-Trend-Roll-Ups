@@ -279,9 +279,11 @@ for (j in 1:ncol(data)){
  Data.adj.wgt[,j] = rep(NA, nrow(data))}
 }
 Data.adj.wgt$VisitYear = data$VisitYear
-#Set adj.wgt dataframes for later
- Data_Mean.adj.wgt = Data_Mean
- Data_YY_Trend.adj.wgt = Data_Mean
+
+# Moved below to get stratum correct on output files
+##Set adj.wgt dataframes for later
+# Data_Mean.adj.wgt = Data_Mean
+# Data_YY_Trend.adj.wgt = Data_Mean
 
 #Calculate site level means and trends for analysis
 for (i in 1:nrow(Data_Mean)) {
@@ -339,7 +341,9 @@ write.csv(Data_Mean, "METRICS_Ave_of_All_Years.csv")
 
 
 
-
+##Set adj.wgt dataframes for later
+ Data_Mean.adj.wgt = Data_Mean
+ Data_YY_Trend.adj.wgt = Data_Mean
 
 
 
