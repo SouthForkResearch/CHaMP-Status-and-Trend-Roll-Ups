@@ -21,6 +21,7 @@ test = read.csv("Metrics_and_Covariates.csv", header=T)
 nrow(test)
 
 Data.adj.wgt = read.csv("CHaMP_Data_All_AdjWgt_by_Metric.csv")
+Data.adj.wgt
 metric.list = as.character(header$Metric.List)
 metric.list = metric.list[metric.list != ""]
 
@@ -84,6 +85,7 @@ watersheds = header$watersheds
 k=15
 k=80
 k=72
+k=1
 length(metric.index)
 
 for (k in 1:length(metric.index)){
@@ -93,7 +95,7 @@ metric.list[k]
 
 test$metric = test[,metric.index[k]]
 test$metric.adj.wgt = Data.adj.wgt[,metric.index[k]]
-
+test$metric.adj.wgt
 if (metric.index.log[k] == "Yes") { test$metric = log(.1+test$metric)}
 
 metric.name = names(metric.index)[k]
@@ -104,9 +106,9 @@ metric.name
 #test = test[is.na(test$metric)==F,]
 
 
-
-prob =test$metric.adj.wgt/sum(test$metric.adj.wgt)
-
+test$metric.adj.wgt
+prob =test$metric.adj.wgt/sum(test$metric.adj.wgt,na.rm=T)
+prob[is.na(prob)] = 0
 ###################
 its= 25
 
@@ -129,6 +131,7 @@ iter=1
 iter
 #### IPB Iterations
 for (iter in 1: its) {
+print(iter)
 
 
 ################!!!!!!!!!!!!!!!################
@@ -223,7 +226,7 @@ SigSq[iter,1:4] = variance.comps
 } # end of iterating for metric
 
 
-
+SigSq
 ####################
 
 
@@ -262,19 +265,15 @@ for (i in 1:nrow(revisit)){
   revisit$nsites[i] = 
 length(revisit$SiteID[revisit$SiteYear == revisit$SiteYear[i]])
 }
-revisit
-revisit$nsites
-
 
 revisit = revisit[revisit$nsites > 1,]
+nrow(revisit)
 
-revisit
-metric.index[k]
 revisit$measure = revisit[,metric.index[k]]
 revisit$measure
 names(revisit)[metric.index[k]]
 
-
+revisit
 if (metric.index.log[k] == "Yes") {revisit$measure = log(.1+revisit$measure)}
 noise.mod = lmer(measure ~ (1|SiteID), data=revisit)
 summary(noise.mod)
@@ -426,6 +425,6 @@ dev.off()
  }
 
 
-################################################################
+#################################################################
 data.frame("Intercept"=Intercept, var.decomp[,c(3,2,1,4,5)])
 #################################################################

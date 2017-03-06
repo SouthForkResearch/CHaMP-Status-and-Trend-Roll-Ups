@@ -1,32 +1,43 @@
 Results.Formatted=NULL
 Results.Formatted
 library(gridExtra)
-
 header = read.csv("header.csv", header=T)
 
+
+results.by.year = NULL
+resultsTrend = NULL
 resultsAllYears = read.csv("c:results files\\CHaMP_All_Years.csv")
 resultsAllYears$Year = rep("Average of All Years", nrow(resultsAllYears))
 
+files = dir("c:results files")
+if ("CHaMPY_Y_Trend.csv" %in% files){
 resultsTrend  = read.csv("c:results files\\CHaMPY_Y_Trend.csv")
 resultsTrend$Year = rep("Linear Trend Across Years", nrow(resultsTrend))
-
+}
 
 minyear=min(header$Years,na.rm=T)
 fn = paste("c:results files\\CHaMP_", minyear,".csv", sep="")
 fn
+
 results.by.year = read.csv(fn, header=T)
 
 results.by.year$Year = rep(minyear, length(results.by.year))
 
+files
+year
   for (year in header$Years[2:length(na.omit(header$Years))]){
+    if (paste("CHaMP_",year,".csv",sep="") %in% files)
+{
   	  temp = read.csv(paste("c:results files\\CHaMP_",year,".csv",sep=""))
  	  temp$Year = rep(year, nrow(temp))
         results.by.year = rbind(results.by.year, temp)
 	  rm(temp)
    }
+}
+
 
 All.Results = rbind(results.by.year, resultsAllYears, resultsTrend)
-
+All.Results
 All.Results
 All.Results = All.Results[
               ((All.Results$Statistic  == "Mean") |  
@@ -96,7 +107,7 @@ All.Results$Trend.se[(All.Results$Year %in% (2011:9999))] = NA
 All.Results$Trend.lcb[(All.Results$Year %in% (2011:9999))] = NA
 All.Results$Trend.ucb[(All.Results$Year %in% (2011:9999))] = NA
 
-
+All.Results
 
 for (j in 1:ncol(All.Results)) {
  if (is.numeric(All.Results[,j])) {All.Results[,j] = round(All.Results[,j], digits=3)
@@ -239,16 +250,16 @@ wsheds =c("Entiat","John Day","Lemhi","Methow", "South Fork Salmon",
 mets = levels(Results.Formatted$Metric)
 met=mets[1]
 for (met in mets){
-
+met
 bar.data = Results.Formatted[Results.Formatted$Metric == met,]
-
+bar.data
 
 VY.SP = paste(bar.data$Visit.Year, bar.data$Sub.Population)
 
-VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014"),8),
-c(rep("Entiat",4),rep("John Day",4),rep("Lemhi",4),rep("Methow",4),
-rep("South Fork Salmon",4),rep("Tucannon",4),
-rep("Upper Grande Ronde",4),rep("Wenatchee",4),rep("Yankee Fork",4)))
+VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016"),8),
+c(rep("Entiat",6),rep("John Day",6),rep("Lemhi",6),rep("Methow",6),
+rep("South Fork Salmon",6),rep("Tucannon",6),
+rep("Upper Grande Ronde",6),rep("Wenatchee",6),rep("Yankee Fork",6)))
 
 
 idx = match(VY.SP.toMatch, VY.SP)
@@ -257,7 +268,7 @@ idx = match(VY.SP.toMatch, VY.SP)
 #   6,6,6,6,7,7,7,7,"brown","brown","brown","brown","purple","purple","purple","purple")
 
 
-names = rep(c("2011", "2012", "2013","2014"),9)
+names = rep(c("2011", "2012", "2013","2014","2015","2016"),9)
 
 filename=met
 filename=gsub("<", "", filename)
@@ -274,9 +285,13 @@ plot.new()
 title(met,cex.main=2)
 
 ws=wsheds[1]
+ws
 for (ws in wsheds){
 
 par(mar = c(5,5,2,2))
+
+bar.data
+bar.data[bar.data$Sub.Population == ws,]
 
 bar.data.ws = bar.data[idx,][bar.data[idx,]$Sub.Population==ws,]
 bar.data.ws = bar.data.ws[is.na(bar.data.ws$Mean)==F,]
@@ -292,6 +307,8 @@ if (col==1){col="brown"}
 if (col==9){col="purple"}
 names
 bar.data.ws
+
+if (nrow(bar.data.ws) > 0){
 a=barplot(bar.data.ws$Mean, pch=19,names=names,
 main=ws,
 cex.names=1,cex.lab=.8,
@@ -300,11 +317,13 @@ ylab =met,
 ylim=c(0, max(bar.data$Mean[idx]+2*bar.data$Std.Error.of.Mean.Estimate[idx],na.rm=T)))
 
 
+
 for (i in (1:length(a))){
 lines(c(a[i],a[i]),
 c(bar.data.ws$Mean[i]+1.96*bar.data.ws$Std.Error.of.Mean.Estimate[i],
   bar.data.ws$Mean[i]-1.96*bar.data.ws$Std.Error.of.Mean.Estimate[i]),
 lw=2)}
+} # end of "if nrow(bar.data.ws)  > 1
 
 } # end of cycle through watersheds (for ws in wsheds)
 
@@ -315,6 +334,7 @@ dev.off()
 
 
 ##############################################################
+if (1==2) {
 # Barplots by Assessment Unit 8/14/2015
 dev.off()
 mets
@@ -454,10 +474,7 @@ dev.off()
 
 ######################
 
-
-
-
-
+} # end of "if 1==2" to not run by assessment unit....
 
 
 
@@ -472,13 +489,13 @@ dev.off()
 # Write to a .pdf file
 ##############################################
 mets = levels(Results.Formatted$Metric)
-
+mets
 pdf(file="barplots.pdf", width=11)
 plot.new()
 
 text(0,.5, adj=c(0,0),
 "This document contains a set of plots and a large table summarizing the 
-status and trend results for selected CHaMP metrics from 2011-2014, as 
+status and trend results for selected CHaMP metrics from 2011-2016, as 
 discussed in the Status and Trend Summary report within the annual CHaMP-
 ISEMP report.  Specific questions or requests for additional information 
 or results summarized at different spatial or temporal scales may be 
@@ -491,6 +508,7 @@ matt@southforkresearch.org
 "
 )
 
+met
 
 for (met in mets){
 
@@ -499,17 +517,17 @@ bar.data = Results.Formatted[Results.Formatted$Metric == met,]
 
 VY.SP = paste(bar.data$Visit.Year, bar.data$Sub.Population)
 VY.SP
-VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014"),8),
-c(rep("Entiat",4),rep("John Day",4),rep("Lemhi",4),rep("Methow",4),
-rep("South Fork Salmon",4),rep("Tucannon",4),
-rep("Upper Grande Ronde",4),rep("Wenatchee",4),rep("Yankee Fork",4)))
+VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016"),8),
+c(rep("Entiat",6),rep("John Day",6),rep("Lemhi",6),rep("Methow",6),
+rep("South Fork Salmon",6),rep("Tucannon",6),
+rep("Upper Grande Ronde",6),rep("Wenatchee",6),rep("Yankee Fork",6)))
 
 
 idx = match(VY.SP.toMatch, VY.SP)
 
 #col = c("dark gray","dark gray","dark gray","dark gray",2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,
 #   6,6,6,6,7,7,7,7,"brown","brown","brown","brown","purple","purple","purple","purple")
-names = rep(c("2011", "2012", "2013","2014"),9)
+names = rep(c("2011", "2012", "2013","2014","2015","2016"),9)
 
 filename=met
 filename=gsub("<", "", filename)
@@ -518,8 +536,13 @@ filename=gsub(":","",filename)
 #jpeg(paste("c:Boxplots/Barplot",filename,".jpg",sep=""), 8,10, units='in', res=600)
 
 #dev.new(width=8, height=10)
-#layout(matrix(c(1,2,3,4,5,6,7,8,9,10),1,1,4,2), heights=c(1,))
+
+# for 9 plots
 layout(matrix(c(1,1,1,2,3,4,5,6,7,8,9,10), 4, 3, byrow = TRUE), heights=c(.5,2,2,2,2.5))
+
+# for 2 [plots
+#layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE), heights=c(.5,2,2,2,2.5))
+
 
 par(mar = c(.5,2,2,2))
 plot.new()
@@ -546,6 +569,8 @@ if (col==9){col="purple"}
 
 names
 bar.data.ws
+if (nrow(bar.data.ws) > 0){
+
 a=barplot(bar.data.ws$Mean, pch=19,names=names,
 main=ws,
 cex.names=1,cex.lab=.8,
@@ -560,6 +585,7 @@ c(bar.data.ws$Mean[i]+1.96*bar.data.ws$Std.Error.of.Mean.Estimate[i],
   bar.data.ws$Mean[i]-1.96*bar.data.ws$Std.Error.of.Mean.Estimate[i]),
 lw=2)}
 
+} # end of "if (nrow(bar.data.ws) > 1)"
 } # end of cycle through watersheds (for ws in wsheds)
 }
 
@@ -568,17 +594,8 @@ lw=2)}
 
 
 ####################################################################
-
-
-
-
-
-
-
-
-
-
-
+# Added this 3/5/2017
+#grid.newpage()
 
 
 tab.results = Results.Formatted
@@ -594,19 +611,19 @@ colnames(tab.results)[16]= "Trend 95% LCB"
 
 
 
-
-
 #dev.off()
 
 #if (1==2) {
 nrow(tab.results)
 #pdf("results_table.pdf",width=11)
-for (i in 1:(nrow(tab.results)/25)+1)
-{
+i=1
+for (i in 1:(nrow(tab.results)/25+1)){
+
 grid.newpage()
 print(paste("i=",i))
 print(c(1+(i-1)*25):(i*25))
 temp = tab.results[(1+(i-1)*25):min((i*25),nrow(tab.results)),]
+
 grid.table(temp,gpar.coretext = gpar(fontsize=6), gpar.coltext = gpar(fontsize=6))
 }
 #}
