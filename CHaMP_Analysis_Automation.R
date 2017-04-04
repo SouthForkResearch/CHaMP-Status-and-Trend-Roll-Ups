@@ -315,7 +315,7 @@ Data_Mean$Stratum = pop.frame$Stratum[idx]
 # Remove data if I don't have a stratum.  Ouch!
 
 # Assign Stratum
-idx = match(paste(Data_YY_Trend$SiteName, 2014), paste(pop.frame$Site_ID, pop.frame$Year))
+idx = match(paste(Data_YY_Trend$SiteName, 2016), paste(pop.frame$Site_ID, pop.frame$Year))
 idx
 Data_YY_Trend$Stratum = pop.frame$Stratum[idx]
 #Data_YY_Trend = Data_YY_Trend[(is.na(Data_YY_Trend$Stratum) == F),]

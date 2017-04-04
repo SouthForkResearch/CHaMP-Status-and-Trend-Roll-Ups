@@ -21,7 +21,9 @@ fn
 
 results.by.year = read.csv(fn, header=T)
 
-results.by.year$Year = rep(minyear, length(results.by.year))
+#results.by.year$Year = rep(minyear, length(results.by.year))
+# changed 3/17/17
+results.by.year$Year = rep(minyear, nrow(results.by.year))
 
 files
 year
