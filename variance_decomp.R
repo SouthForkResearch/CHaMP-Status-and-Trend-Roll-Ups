@@ -120,6 +120,7 @@ its= 25
 SigSq = array(0, c(its, 4))
 Intercept.Est = rep(0, its)
 
+test$VisitYear
 nc = length(levels(as.factor(as.character(paste(test$WatershedName, test$VisitYear)))))
 nc
 
@@ -177,6 +178,9 @@ variance.comps
 summary(mod)
 anova(mod)
 
+sample$VisitYear
+sample$Watershed
+sample$ValleyClass
 
 mod = lmer((metric+1)~ 1+ VisitYear +  (1|VisitYear) +  (1|Watershed) + (1|ValleyClass), data = sample)
 summary(mod)

@@ -257,20 +257,21 @@ bar.data = Results.Formatted[Results.Formatted$Metric == met,]
 bar.data
 
 VY.SP = paste(bar.data$Visit.Year, bar.data$Sub.Population)
-
-VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016"),8),
-c(rep("Entiat",6),rep("John Day",6),rep("Lemhi",6),rep("Methow",6),
-rep("South Fork Salmon",6),rep("Tucannon",6),
-rep("Upper Grande Ronde",6),rep("Wenatchee",6),rep("Yankee Fork",6)))
+VY.SP
+VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016","2017"),9),
+c(rep("Entiat",7),rep("John Day",7),rep("Lemhi",7),rep("Methow",7),
+rep("South Fork Salmon",7),rep("Tucannon",7),
+rep("Upper Grande Ronde",7),rep("Wenatchee",7),rep("Yankee Fork",7)))
+VY.SP.toMatch
 
 
 idx = match(VY.SP.toMatch, VY.SP)
-
+idx
 #col = c("dark gray","dark gray","dark gray","dark gray",2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,
 #   6,6,6,6,7,7,7,7,"brown","brown","brown","brown","purple","purple","purple","purple")
 
 
-names = rep(c("2011", "2012", "2013","2014","2015","2016"),9)
+names = rep(c("2011", "2012", "2013","2014","2015","2016","2017"),9)
 
 filename=met
 filename=gsub("<", "", filename)
@@ -497,7 +498,7 @@ plot.new()
 
 text(0,.5, adj=c(0,0),
 "This document contains a set of plots and a large table summarizing the 
-status and trend results for selected CHaMP metrics from 2011-2016, as 
+status and trend results for selected CHaMP metrics from 2011-2017, as 
 discussed in the Status and Trend Summary report within the annual CHaMP-
 ISEMP report.  Specific questions or requests for additional information 
 or results summarized at different spatial or temporal scales may be 
@@ -519,17 +520,17 @@ bar.data = Results.Formatted[Results.Formatted$Metric == met,]
 
 VY.SP = paste(bar.data$Visit.Year, bar.data$Sub.Population)
 VY.SP
-VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016"),8),
-c(rep("Entiat",6),rep("John Day",6),rep("Lemhi",6),rep("Methow",6),
-rep("South Fork Salmon",6),rep("Tucannon",6),
-rep("Upper Grande Ronde",6),rep("Wenatchee",6),rep("Yankee Fork",6)))
+VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016","2017"),9),
+c(rep("Entiat",7),rep("John Day",7),rep("Lemhi",7),rep("Methow",7),
+rep("South Fork Salmon",7),rep("Tucannon",7),
+rep("Upper Grande Ronde",7),rep("Wenatchee",7),rep("Yankee Fork",7)))
 
 
 idx = match(VY.SP.toMatch, VY.SP)
 
 #col = c("dark gray","dark gray","dark gray","dark gray",2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,
 #   6,6,6,6,7,7,7,7,"brown","brown","brown","brown","purple","purple","purple","purple")
-names = rep(c("2011", "2012", "2013","2014","2015","2016"),9)
+names = rep(c("2011", "2012", "2013","2014","2015","2016","2017"),9)
 
 filename=met
 filename=gsub("<", "", filename)
