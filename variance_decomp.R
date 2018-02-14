@@ -18,6 +18,12 @@ metric.use.idx
 
 
 test = read.csv("Metrics_and_Covariates.csv", header=T)
+test$Grad
+sites = levels(factor(test$SiteName))
+sites
+
+
+
 nrow(test)
 
 Data.adj.wgt = read.csv("CHaMP_Data_All_AdjWgt_by_Metric.csv")
@@ -172,6 +178,7 @@ sample$VisitYear
 max(sample$metric)
 
 mod = lmer((metric+1)~ 1+ (1|VisitYear) +  (1|Watershed) + (1|ValleyClass), data = sample)
+summary(mod)
 Intercept.Est[iter]=summary(mod)$coefficients[1]
 variance.comps = c(as.numeric(VarCorr(mod)) ,attr(VarCorr(mod), "sc")^2 )
 variance.comps
@@ -180,13 +187,16 @@ anova(mod)
 
 sample$VisitYear
 sample$Watershed
-sample$ValleyClass
+names(sample)
+sample$V_Class
 
 mod = lmer((metric+1)~ 1+ VisitYear +  (1|VisitYear) +  (1|Watershed) + (1|ValleyClass), data = sample)
 summary(mod)
 Intercept.Est[iter]=summary(mod)$coefficients[1]
 variance.comps = c(as.numeric(VarCorr(mod)) ,attr(VarCorr(mod), "sc")^2 )
+summary(mod)
 variance.comps
+
 sample$VisitYear = as.numeric(sample$VisitYear)
 
 #sample$VisitYear = factor(sample$VisitYear)
@@ -198,17 +208,18 @@ variance.comps = c(NA, NA, NA, NA)
 
 
 #names(variance.comps) = c("Stratum", "Watershed", "VisitYear", "Site")
-names(variance.comps) = c("Watershed","ValleyClass","VisitYear", "Site")
+# Corrected!
+names(variance.comps) = c("Watershed","VisitYear", "ValleyClass","Site")
 
  # }
 
-#variance.comps
+variance.comps
 #print(names(variance.comps))
 #print(variance.comps)
 sample$WatershedName
 
 sample$VisitYear
-names(Est)
+
 colnames(Estimate)
 Est = tapply(sample$metric, as.factor(as.character(paste(sample$WatershedName, sample$VisitYear))), mean)
 Est
@@ -305,6 +316,7 @@ display.idx
 
 
 var.decomp = data.frame(results,meas.noise)
+var.decomp
 rownames(var.decomp)
 #var.decomp$Residuals = rep(NA, nrow(var.decomp))
 #row.names(var.decomp)
@@ -339,7 +351,7 @@ var.decomp$meas.noise
 #var.decomp
 #colnames(var.decomp)[5] = "Meas. Error"
 #colnames(var.decomp)=c("Valley Class", "Watershed", "Year", "Site", "Meas.Error")
-colnames(var.decomp)=c("Watershed","Valley Class", "Year", "Site", "Meas.Error")
+#colnames(var.decomp)=c("Watershed","Valley Class", "Year", "Site", "Meas.Error")
 
 write.csv(var.decomp[,c(3,2,1,4,5)], "Variance Decomposition/vardecomp.csv")
 
@@ -363,7 +375,7 @@ var.sum = apply(var.decomp, 1, sum)
 var.sum
 normalized.var$metric.group = header$metric.group.for.Variance.Decomposition[1:nrow(var.decomp)]
 
-
+ncol(var.decomp)
 for (j in 1:ncol(var.decomp)) {
 normalized.var[,j] = var.decomp[,j]/ var.sum}
 
@@ -408,10 +420,13 @@ Metric Group:", mg), cex.main=2)
 label.size= .35*(z==1) + .35*(z==2)
 label.size= .6
 
+names(normalized.var)
+
 par(mar=c(3,22,0,1))
 #barplot(t(normalized.var[bar.idx,c(3,2,1,4,5)]), las=2, 
 #Needed to change order when changing to Valley Class instead of Stratum
-barplot(t(normalized.var[bar.idx,c(3,1,2,4,5)]), las=2, 
+#barplot(t(normalized.var[bar.idx,c(3,1,2,4,5)]), las=2, 
+barplot(t(normalized.var[bar.idx,c(2,1,3,4,5)]), las=2, 
 cex.names =label.size,
 #cex.names=min(1, 1*40/length(metric.list)), 
 horiz=T, col=c(2,3,4,5,6),

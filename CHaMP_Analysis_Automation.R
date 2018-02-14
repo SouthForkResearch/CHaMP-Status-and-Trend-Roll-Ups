@@ -1,23 +1,27 @@
+# Code to Define and Adjust GRTS weights for CHaMP sites and metrics
+# January 2014, last modified Dec 2017
+# Matt Nahorniak (matt@southforkresearch.org)
+
+# Note: After running this code, run "Format GRTS Results" to convert output into the nice format
+# used for the annual writeup.  This code generates a full set of results, but the latter code trims it down and
+# cleans up the output for the report, makes plots, etc.
+
 
 # Instructions for adding a year
 # Add additional year to header.csv file
-# Download "SITEEVALUATION_20xx.csv" from cm.org
+# Download "SITEEVALUATION_20xx.csv" from cm.org for new year and add it to folder
 # Download results database and export new version of MetricVisitINformation and MetricsandCovariates" from database on cm.org, convert to .csv files
-# Export temperature metrics from database, merge with metricvisitinformation.csv.
 # Get file w/ updated strata by site_ID: something like the file "CHaMPSites_AnalysisStrata_20150415.csv", and add that file to the header file.
+# Note several points in the code where the year needs to be updated.  See in-line comments.
 
+# Load required libraries
 library(spsurvey)
 library(shapefiles)
 library(survey)
+
+# Create required directories
 dir.create("pdf plots")
 dir.create("results files")
-
-
-
-# Code to Define and Adjust GRTS weights for CHaMP sites and metrics
-# January 2014
-# Matt Nahorniak (matt@southforkresearch.org)
-
 
 
 
@@ -25,140 +29,96 @@ dir.create("results files")
 # Header file is used to specify file names containing data files,
 # site eval files, sample frame files, and master sample frame file
 header = read.csv("header.csv", header=T)
-names(header)
 sg=header$Subgroup.s.[1]
 Years= na.omit(header$Years)
+# Figure out how many years we're rolling up
 n.years = length(Years)
 minyear= min(Years)
 
-# Calling this "pop.frame", but it's reallyt the sample frame. This is used
+
+# Calling this "pop.frame" for outdated reasons.  This is a file with strata names by site_ID, used
 # to link SiteName from the data file(s) to the stratum, given in the pop frame file.
-
-as.character(header$Frame.File.Names[1])
 pop.frame = read.csv(as.character(header$Frame.File.Names[1]), header=T)
-
 
 # Pull list of watersheds to analyze from header file
 watersheds = as.character(header$watersheds[header$watersheds !=""])
-
-
-## initialize for later
-#Strata.Extents.All.Watersheds2011 = data.frame(watershed="na", "Strata"="na", "Extents"=0)
-#Strata.Extents.All.Watersheds2012 = Strata.Extents.All.Watersheds2011
-#Strata.Extents.All.Watersheds2013 = Strata.Extents.All.Watersheds2011
-
+watersheds
 
 
 #######################################################################
-# Read all metric files and combine into one file covering all years
-# Right now each file has different columns, so this is a pain....
+# Read all metric file(s)
+# In years past these have come from multiple files.  By 2017 this should all be in one file
+# or a single file is created externally.  "MetricVisitInformation.csv" contains the CHaMP metrics.
+# MetricsAndCovariates.csv" contains x_albers, y_albers, primary.visit, linkable by VisitID.  
+# This file used to be available on cm.org.  As of 2017, it needed to be manually constructed from
+# data provided by Carol.  I'm not confident the format and filename provided by Carol will be used
+# in the future (if indeed this analysis is done at all in the future), so I'm simply re-creating
+# MetricsAndCovariates.csv (as well as MetricVisitInformation.csv") manually from Carol's data and
+# using the code as-is rather than modifying the code to use the new files from Carol.
 
-#######################################################################
-##### read data files, and make one data file that combines all years
 
-## Build an additional Metric.File.Name and Eval.File.Name that
-## combines all years.  Write these to .csv files and use them
-## just as other files are used.
-
-#names(header)
-#datafiles = header$Data.File.Names.by.Year
-#datafiles = datafiles[datafiles !=""]
-#datafiles = as.character(datafiles)
-#datafiles
-
-## read the data files and build a single data frame "data" from all years' data
-#data = read.csv(datafiles[1], header=T)
-#data$VisitYear = minyear
-#for (k in 2:length(datafiles)){
-#
-#datafiles
-#datanew = read.csv(datafiles[k], header=T)
-#datanew$VisitYear = rep((minyear-1+k), nrow(datanew))
-#data = rbind(data, datanew)
-#}
 
 ########################################################
 
-mets = read.csv("Metrics Database/MetricVisitInformation.csv", header=T)
+# Make sure this points to the most up to date data file!!!
+mets = read.csv("Metrics Database/GRTSData_20180212.csv", header=T)
+nrow(mets)
+#mets = read.csv("Metrics Database/MetricVisitInformation.csv", header=T)
 covars = read.csv("Metrics Database/MetricAndCovariates.csv", header=T)
 
-levels(factor(mets$VisitYear))
-
 # merge metrics and covariates  
-
 data = merge(covars, mets, by="VisitID",suffixes = c("",".y"))
 data = data[is.na(data$x_albers)=="FALSE",]
-levels(factor(data$VisitYear))
-
-data$VisitYear
-
-## remove non Secesh SFS as we only have data from 2011
-idx = data$WatershedName == "South Fork Salmon" & data$CategoryName!="Secesh"
-length(idx[idx == "TRUE"])
-data = data[idx=="FALSE",]
-
-###################################################33
+nrow(data)
 
 ##Temp - add Minam to this list for Seth
 #data = data[data$WatershedName %in% c(
 #"Wenatchee", "Entiat", "Methow", "John Day", "Upper Grande Ronde", "Tucannon", "Lemhi", "South Fork Salmon",
 #"Yankee Fork", "Minam"),]
 
+
 #############################################################3
 
-# Temp Cross out if running Minam
+# Don't use this, but use code above, if running Minam
 # Filter and reorder watershed names for boxplots
-data = data[data$WatershedName %in% c(
+data = data[data$Watershed %in% c(
 "Wenatchee", "Entiat", "Methow", "John Day", "Upper Grande Ronde", "Tucannon", "Lemhi", "South Fork Salmon","Yankee Fork"),]
-# Order teh watershed name levels
-factor(data$Watershed, levels=c("Wenatchee", "Entiat", "Methow", "John Day", "Upper Grande Ronde", "Tucannon", "Lemhi", "South Fork Salmon","Yankee Fork"))
+# Order the watershed name levels
+#factor(data$Watershed, levels=c("Wenatchee", "Entiat", "Methow", "John Day", "Upper Grande Ronde", "Tucannon", "Lemhi", "South Fork Salmon","Yankee Fork"))
 
-
+nrow(data)
 ####################################################
 
+#data$Watershed
+#factor(data$Watershed)
 # Some junk to account for constantly changing column names.
-data$Watershed = as.character(data$WatershedName)
-#data$Watershed[data$Watershed=="Methow "] = "Methow"
+#data$Watershed = as.character(data$WatershedName)
 data$Watershed = factor(data$Watershed)
-levels(data$Watershed)
-
-data[data$Watershed == "Entiat",]$SiteName
-
-
+nrow(data)
+#data$Watershed
+# Write the combined data to a file
 write.csv(data,"Metrics_and_Covariates_All_Data.csv")
-levels(factor(data$VisitYear))
-# HERE!!
 ###########################################################3
 
 
-# Do some clean up of the data.  Only first visit number used.
-data = data[data$Primary.Visit.y =="Yes",]
+#
+# Do some clean up of the data.  
+# Only primary visit is used.
 
-## Check for missing primary.visit.y in problem watersheds.
-#temp=data[data$VisitYear==2016,]
-#levels(factor(temp$Watershed))
-#temp=temp[temp$Watershed %in% c("Lemhi","South Fork Salmon", "John Day"),]
-#data.frame(temp$Watershed, temp$Primary.Visit, temp$Primary.Visit.y)
-
-# To Do:  Update this (below doesn't work cause column names change on cm.org
-#data = data[data$Primary.Visit  =="Yes",]
-#data = data[data$CHaMP.Core == "Yes",]
-#data = data[data$Target=="Target",]
+# Carol's new data file uses "VisitObjective" instead of "Primary Visit"
+data = data[data$VisitObjective == "Primary Visit",]
+#data = data[data$Primary.Visit =="Yes",]
 
 # Only carry data from watersheds of interest
 data=data[data$Watershed %in% watersheds,]
 nrow(data)
-data$VisitYear
+#data$Alk
 
 ###########################
 # initialize
-
-
-header$Evaluation.File.Names
 All.Site.Evals = read.csv(as.character(header$Evaluation.File.Names[n.years]), header=T)
 
-n.years
-y=n.years-3
+# Get all the site evals into a single dataframe
 for (y in (n.years-1):1) {
   temp = read.csv(as.character(header$Evaluation.File.Names[y]), header=T)
 # 2/3/2017 fix
@@ -169,20 +129,14 @@ for (y in (n.years-1):1) {
 sites = levels(All.Site.Evals$Site.ID)
 n.sites = length(sites)
 
-
 # initialize evals for one-row-per-site
 All.Evals = All.Site.Evals[1:n.sites,]
 
-n.sites
+
 # Specify priority level for picking a single evaluation from [possible] multiple
 # evaluations (year after year)
-
-names(All.Site.Evals)
-
-All.Site.Evals$Site.ID
-k=1
 for (k in 1: n.sites){
-print(k)
+print(paste("Setting eval status site",k,"of", n.sites))
 	temp =(All.Site.Evals[All.Site.Evals$Site.ID == sites[k],])
 
 
@@ -198,49 +152,39 @@ priority =
 	All.Evals[k,] = temp[pointer,]
      }
 
+# Write file of all site evals
 write.csv(All.Evals, "SITEEVALUATION_AllYears.csv")
-
+#nrow(data)
 ############################
-
-
-
 
 
 # Initialize wgt
 data$wgt = rep(NA, nrow(data))
-
-names(pop.frame)
+data$SiteName
+as.character(data$SiteName)
+data$VisitYear
 # Assign Stratum based on file CV provided.
-idx = match(paste(data$SiteName, data$VisitYear), paste(pop.frame$Site_ID, pop.frame$Year))
+
+pop.frame$SiteName
+idx = match(paste(data$SiteName, data$VisitYear), paste(pop.frame$SiteName, pop.frame$Year))
+idx
 data$Stratum = pop.frame$Stratum[idx]
-
-levels(factor(pop.frame$Year))
-names(pop.frame)
-
-
-data.frame(data$SiteName, data$VisitYear,data$Stratum)
 nrow(data)
-
+data$Stratum
+# remove any sites w/0 stratum
+# Remove data if I don't have a stratum.  Ouch!
 data = data[(is.na(data$Stratum) == F),]
 data = data[data$Stratum !="",]
-# Remove data if I don't have a stratum.  Ouch!
-
-#data$VisitYear
-data.frame(data$SiteName, data$Stratum)
-
-
-# Losing 2015 before here!!!
-levels(factor(data$VisitYear))
-
-
+# Good to here!
 
 ###############################################################
-# Now I need to take the mean and find trend of all quantitative variables
+# Now I need to take the mean and find trend of all quantitative variables for
+# long term status and trend estimates.  We'll end up doing GRTS rollups for
+# each individual year AND the average over all years AND the trend over all years.
 
 
 sites = levels(factor(data$SiteName))
-length(sites)
-sites
+# initialize variagbles
 Data_Mean = data[1:length(sites),]
 Data_Mean$wgt = rep(0, nrow(Data_Mean))
 Data_YY_Trend = Data_Mean
@@ -249,124 +193,82 @@ Data.adj.wgt = data # used to store adj.wgts later on a per-metric basis
 #Get first row for every site, from which to assign site Name and other
 #Categorical info
 index = match(sites, data$SiteName)
-index
-sites
-
-length(sites)
-
-i=1
-index
-
-
 
 for (i in 1:length(index)){
-
-Data_Mean[i,] = data[index[i],]
-Data_YY_Trend[i,] = data[index[i],]
+	Data_Mean[i,] = data[index[i],]
+	Data_YY_Trend[i,] = data[index[i],]
 
 #Set all numeric values to NA
 
 for (j in 1:ncol(data)){
-if (is.numeric(data[i,j])){
- Data_Mean[i,j] = NA
- Data_YY_Trend[i,j] = NA
-}}
+	if (is.numeric(data[i,j])){
+		 Data_Mean[i,j] = NA
+		 Data_YY_Trend[i,j] = NA
+	}}
 }
 
 for (j in 1:ncol(data)){
- if (is.numeric(data[,j])) {
- Data.adj.wgt[,j] = rep(NA, nrow(data))}
-}
-Data.adj.wgt$VisitYear = data$VisitYear
+	 if (is.numeric(data[,j])) {
+	 Data.adj.wgt[,j] = rep(NA, nrow(data))}
+	}
+	Data.adj.wgt$VisitYear = data$VisitYear
+
 #Set adj.wgt dataframes for later
- Data_Mean.adj.wgt = Data_Mean
- Data_YY_Trend.adj.wgt = Data_Mean
+	 Data_Mean.adj.wgt = Data_Mean
+	 Data_YY_Trend.adj.wgt = Data_Mean
 
 #Calculate site level means and trends for analysis
-for (i in 1:nrow(Data_Mean)) {
-print(paste("row",i,"of", nrow(Data_Mean)))
+	for (i in 1:nrow(Data_Mean)) {
+		print(paste("Calculating Site level means and trends, row",i,"of", nrow(Data_Mean)))
 
-for (j in na.omit(match(levels(factor(header$Metric.List)), colnames(data)))){
-site.data = data[data$SiteName == Data_Mean$SiteName[i],]
-site.data
-site.data[j]
- Data_Mean[i,j] = mean(site.data[,j], na.rm=T)
-if (length(na.omit(site.data[,j])) > 1) {
- Data_YY_Trend[i,j]=coefficients(lm(site.data[,j] ~ site.data$VisitYear))[2]
-} # end of "if" everything is numeric and more than one site from which to calc trend
+	for (j in na.omit(match(levels(factor(header$Metric.List)), colnames(data)))){
+	site.data = data[data$SiteName == Data_Mean$SiteName[i],]
+	 Data_Mean[i,j] = mean(site.data[,j], na.rm=T)
+
+# Calculating Trends
+# Force use to have at least three data points for trend
+# I might want to make the year range > 5 or something, rather than specify
+# actual point counts.
+if (length(na.omit(site.data[,j])) > 2) {
+	 Data_YY_Trend[i,j]=coefficients(lm(site.data[,j] ~ site.data$VisitYear))[2]
+	} # end of "if" everything is numeric and more than one site from which to calc trend
+
+# Assign x_albers and y_albers to the mean and trend data frame
 Data_Mean$x_albers[i] = mean(site.data$x_albers, na.rm=T)
 Data_Mean$y_albers[i] = mean(site.data$y_albers, na.rm=T)
 Data_YY_Trend$x_albers[i] = mean(site.data$x_albers, na.rm=T)
 Data_YY_Trend$y_albers[i] = mean(site.data$y_albers, na.rm=T)
 } # end of loop through metrics
-
 } # end of loop through sites
 
 
 
 #Assign Stratum for Data_Mean and Data_YY_Trend
 # Assign Stratum
+# NOTE: Need to updates year every time w do this for a new year.  Means and Trends should always
+# use the most recent year, such that (later in the code) they use the stratum extents from the most recent year
 
-
-# Changed 2014 to 2016 Here!
-idx = match(paste(Data_Mean$SiteName, 2016), paste(pop.frame$Site_ID, pop.frame$Year))
-
+idx = match(paste(Data_Mean$SiteName, 2017), paste(pop.frame$SiteName, pop.frame$Year))
+idx
 Data_Mean$Stratum = pop.frame$Stratum[idx]
-# Remove data if I don't have a stratum.  Ouch!
 
 # Assign Stratum
-idx = match(paste(Data_YY_Trend$SiteName, 2016), paste(pop.frame$Site_ID, pop.frame$Year))
-idx
+idx = match(paste(Data_YY_Trend$SiteName, 2017), paste(pop.frame$SiteName, pop.frame$Year))
 Data_YY_Trend$Stratum = pop.frame$Stratum[idx]
 #Data_YY_Trend = Data_YY_Trend[(is.na(Data_YY_Trend$Stratum) == F),]
 #Data_YY_Trend = Data_YY_Trend[Data_YY_Trend$Stratum !="",]
-# Remove data if I don't have a stratum.  Ouch!
 
-
-
-
-
-
-
-Data_Mean$Stratum
-
+# write the mean and trends to files
 write.csv(Data_YY_Trend, "METRICS_Trends.csv")
 write.csv(Data_Mean, "METRICS_Ave_of_All_Years.csv")
 
+
 # all.years is the name of the file with all years data, average
 # over all years.  Now I've got to combine site-eval file for all years
-#
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ################################################################
 ################################################################
-
-##########
-############
-############
-############
-
-#### HERE!!!! #####
-# Loop through watersheds.  
-
-
 # Figure out Extents for each Strata, for weights
-
-
-
 #####################################################
 # Find weights for data (by year) and mean and trend 
 #Need to uniquely find Weights for each set
@@ -375,144 +277,36 @@ write.csv(Data_Mean, "METRICS_Ave_of_All_Years.csv")
 # Read Shape File from which strata extents are obtained
 
 shape = read.dbf(paste("Frame Files/",header$Frame.File.Names[2],".dbf",sep="" ))
-#shape$dbf= shape$dbf[shape$dbf$Target2013 == "Target",]
-
 
 #####################################################################
 ####### Checks - frame length by watershed x stratum ################
 # Note - not yet sorted by "target".  That happens below, by year ###
-tapply(shape$dbf$LengthKM, shape$dbf$CHaMPshed, sum)
+#tapply(shape$dbf$LengthKM, shape$dbf$CHaMPshed, sum)
 
-Lem=shape$dbf[shape$dbf$CHaMPshed=="Lemhi",]
-Wen=shape$dbf[shape$dbf$CHaMPshed=="Wenatchee",]
-Tuc=shape$dbf[shape$dbf$CHaMPshed=="Tucannon",]
-SFS=shape$dbf[shape$dbf$CHaMPshed=="South Fork Salmon",]
-UGR=shape$dbf[shape$dbf$CHaMPshed=="Upper Grande Ronde",]
-JD=shape$dbf[shape$dbf$CHaMPshed=="John Day",]
-Ent=shape$dbf[shape$dbf$CHaMPshed=="Entiat",]
-Met=shape$dbf[shape$dbf$CHaMPshed=="Methow",]
-YF=shape$dbf[shape$dbf$CHaMPshed=="Yankee Fork",]
-Min=shape$dbf[shape$dbf$CHaMPshed=="Minam",]
-
-names(shape$dbf)
-
-tapply(Min$LengthKM, factor(Min$AStrat2014),sum)
-tapply(Min$LengthKM, factor(Min$AStrat2013),sum)
-tapply(Min$LengthKM, factor(Min$AStrat2012),sum)
-tapply(Min$LengthKM, factor(Min$AStrat2015),sum)
-tapply(Min$LengthKM, factor(Min$AStrat2016),sum)
-levels(factor(Min$Target2015))
-levels(factor(Min$Target2016))
-
-tapply(Wen$LengthKM, factor(Wen$AStrat2011),sum)
-tapply(Wen$LengthKM, factor(Wen$AStrat2012),sum)
-tapply(Wen$LengthKM, factor(Wen$AStrat2013),sum)
-tapply(Wen$LengthKM, factor(Wen$AStrat2014),sum)
-tapply(Wen$LengthKM, factor(Wen$AStrat2015),sum)
-tapply(Wen$LengthKM, factor(Wen$AStrat2016),sum)
-levels(factor(Wen$Target2015))
-levels(factor(Wen$Target2016))
-
-
-tapply(Lem$LengthKM, factor(Lem$AStrat2011),sum)
-tapply(Lem$LengthKM, factor(Lem$AStrat2012),sum)
-tapply(Lem$LengthKM, factor(Lem$AStrat2013),sum)
-tapply(Lem$LengthKM, factor(Lem$AStrat2014),sum)
-tapply(Lem$LengthKM, factor(Lem$AStrat2015),sum)
-tapply(Lem$LengthKM, factor(Lem$AStrat2016),sum)
-
-
-
-tapply(Tuc$LengthKM, factor(Tuc$AStrat2011),sum)
-tapply(Tuc$LengthKM, factor(Tuc$AStrat2012),sum)
-tapply(Tuc$LengthKM, factor(Tuc$AStrat2013),sum)
-tapply(Tuc$LengthKM, factor(Tuc$AStrat2014),sum)
-tapply(Tuc$LengthKM, factor(Tuc$AStrat2015),sum)
-tapply(Tuc$LengthKM, factor(Tuc$AStrat2016),sum)
-levels(factor(Tuc$Target2015))
-levels(factor(Tuc$Target2016))
-
-tapply(SFS$LengthKM, factor(SFS$AStrat2011),sum)
-tapply(SFS$LengthKM, factor(SFS$AStrat2012),sum)
-tapply(SFS$LengthKM, factor(SFS$AStrat2013),sum)
-tapply(SFS$LengthKM, factor(SFS$AStrat2014),sum)
-tapply(SFS$LengthKM, factor(SFS$AStrat2015),sum)
-tapply(SFS$LengthKM, factor(SFS$AStrat2016),sum)
-
-
-
-tapply(UGR$LengthKM, factor(UGR$AStrat2011),sum)
-tapply(UGR$LengthKM, factor(UGR$AStrat2012),sum)
-tapply(UGR$LengthKM, factor(UGR$AStrat2013),sum)
-tapply(UGR$LengthKM, factor(UGR$AStrat2014),sum)
-tapply(UGR$LengthKM, factor(UGR$AStrat2015),sum)
-tapply(UGR$LengthKM, factor(UGR$AStrat2016),sum)
-levels(factor(UGR$Target2015))
-levels(factor(UGR$Target2016))
-
-tapply(YF$LengthKM, factor(YF$AStrat2011),sum)
-tapply(YF$LengthKM, factor(YF$AStrat2012),sum)
-tapply(YF$LengthKM, factor(YF$AStrat2013),sum)
-tapply(YF$LengthKM, factor(YF$AStrat2014),sum)
-tapply(YF$LengthKM, factor(YF$AStrat2015),sum)
-tapply(YF$LengthKM, factor(YF$AStrat2016),sum)
-levels(factor(YF$Target2015))
-levels(factor(YF$Target2016))
-
-tapply(Ent$LengthKM, factor(Ent$AStrat2011),sum)
-tapply(Ent$LengthKM, factor(Ent$AStrat2012),sum)
-tapply(Ent$LengthKM, factor(Ent$AStrat2013),sum)
-tapply(Ent$LengthKM, factor(Ent$AStrat2014),sum)
-tapply(Ent$LengthKM, factor(Ent$AStrat2015),sum)
-tapply(Ent$LengthKM, factor(Ent$AStrat2016),sum)
-levels(factor(Ent$Target2015))
-levels(factor(Ent$Target2016))
-
-
-tapply(Met$LengthKM, factor(Met$AStrat2011),sum)
-tapply(Met$LengthKM, factor(Met$AStrat2012),sum)
-tapply(Met$LengthKM, factor(Met$AStrat2013),sum)
-tapply(Met$LengthKM, factor(Met$AStrat2014),sum)
-tapply(Met$LengthKM, factor(Met$AStrat2015),sum)
-tapply(Met$LengthKM, factor(Met$AStrat2016),sum)
-tapply(Met$LengthKM, factor(Met$Target2016),levels)
-levels(factor(Met$Target2015))
-levels(factor(Met$Target2016))
-
-
-tapply(JD$LengthKM, factor(JD$AStrat2011),sum)
-tapply(JD$LengthKM, factor(JD$AStrat2012),sum)
-tapply(JD$LengthKM, factor(JD$AStrat2013),sum)
-tapply(JD$LengthKM, factor(JD$AStrat2014),sum)
-tapply(JD$LengthKM, factor(JD$AStrat2015),sum)
-tapply(JD$LengthKM, factor(JD$AStrat2016),sum)
-levels(factor(JD$Target2015))
-levels(factor(JD$Target2016))
+#Lem=shape$dbf[shape$dbf$CHaMPshed=="Lemhi",]
+#Wen=shape$dbf[shape$dbf$CHaMPshed=="Wenatchee",]
+#Tuc=shape$dbf[shape$dbf$CHaMPshed=="Tucannon",]
+#SFS=shape$dbf[shape$dbf$CHaMPshed=="South Fork Salmon",]
+#UGR=shape$dbf[shape$dbf$CHaMPshed=="Upper Grande Ronde",]
+#JD=shape$dbf[shape$dbf$CHaMPshed=="John Day",]
+#Ent=shape$dbf[shape$dbf$CHaMPshed=="Entiat",]
+#Met=shape$dbf[shape$dbf$CHaMPshed=="Methow",]
+#YF=shape$dbf[shape$dbf$CHaMPshed=="Yankee Fork",]
+#Min=shape$dbf[shape$dbf$CHaMPshed=="Minam",]
+#names(shape$dbf)
 
 ######################### end of checks ################################
 
-shape$dbf$AStrat2014
-
-
 # Assign Strata to combine watershedname and stratum.
-#shape$dbf$WS_Strata2011= paste(shape$dbf$CHaMPshed, shape$dbf$Strata2011)
-#shape$dbf$WS_Strata2012= paste(shape$dbf$CHaMPshed, shape$dbf$Strata2012)
-#shape$dbf$WS_Strata2013= paste(shape$dbf$CHaMPshed, shape$dbf$Strata2013)
-#shape$dbf$WS_Strata2014= paste(shape$dbf$CHaMPshed, shape$dbf$Strata2014)
 shape$dbf$WS_Strata2011= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2011)
 shape$dbf$WS_Strata2012= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2012)
 shape$dbf$WS_Strata2013= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2013)
 shape$dbf$WS_Strata2014= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2014)
 shape$dbf$WS_Strata2015= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2015)
 shape$dbf$WS_Strata2016= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2016)
-shape$dbf$WS_Strata2017= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2016)
-shape$dbf$WS_Strata2018= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2016)
-shape$dbf$WS_Strata2019= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2016)
-
-shape$dbf$WS_Strata2016[shape$dbf$CHaMPshed=="South Fork Salmon"]
-
-
-names(shape$dbf)
+shape$dbf$WS_Strata2017= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2017)
+shape$dbf$WS_Strata2018= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2017)
+shape$dbf$WS_Strata2019= paste(shape$dbf$CHaMPshed, shape$dbf$AStrat2017)
 
 dbf2011 = shape$dbf
 dbf2012 = shape$dbf
@@ -524,51 +318,47 @@ dbf2017 = shape$dbf
 dbf2018 = shape$dbf
 dbf2019 = shape$dbf
 
-
+# Screen to Target Only
 dbf2011 = shape$dbf[shape$dbf$Target2011 == "Target",]
 dbf2012 = shape$dbf[shape$dbf$Target2012 == "Target",]
 dbf2013 = shape$dbf[shape$dbf$Target2013 == "Target",]
 dbf2014 = shape$dbf[shape$dbf$Target2014 == "Target",]
 dbf2015 = shape$dbf[shape$dbf$Target2015 == "Target",]
-# Changed 2015 to 2016 Here!!!! 
+# Changed 2016 to 2017 Here!!!! ... Need to update this every new year this is run!!!
 dbf2016 = shape$dbf[shape$dbf$Target2016 == "Target",]
-dbf2017 = shape$dbf[shape$dbf$Target2016 == "Target",]
-dbf2018 = shape$dbf[shape$dbf$Target2016 == "Target",]
-dbf2019 = shape$dbf[shape$dbf$Target2016 == "Target",]
+dbf2017 = shape$dbf[shape$dbf$Target2017 == "Target",]
+dbf2018 = shape$dbf[shape$dbf$Target2017 == "Target",]
+dbf2019 = shape$dbf[shape$dbf$Target2017 == "Target",]
 
-names(shape$dbf)
-shape$dbf$Target2016[shape$dbf$CHaMPshed == "South Fork Salmon"]
-shape$dbf$Target2016[shape$dbf$CHaMPshed == "Lemhi"]
 
-shape$dbf$Target2015[shape$dbf$CHaMPshed == "South Fork Salmon"]
-
-#frame lengths by stratum
+#frame lengths by stratum for target only
+# Quick Check
 tapply(dbf2014$LengthKM, dbf2014$CHaMPshed, sum)
+tapply(dbf2017$LengthKM, dbf2017$CHaMPshed, sum)
 
 
 k=1
 for (k in 1:3) {
 if (k==1) {temp.data = data}
 if (k==2) {temp.data = Data_Mean
-           temp.data$VisitYear = rep(2016, nrow(temp.data))
-} #Use 2016 Frame Info for means
+           temp.data$VisitYear = rep(2017, nrow(temp.data))
+} #Use most recent Frame Info for means and trends 
+# Note - Need to update this each year!!!
 # changed from 2014
 if (k==3) {temp.data = Data_YY_Trend
-           temp.data$VisitYear = rep(2016, nrow(temp.data))
-} #Use 2016 Frame Info for trends
+           temp.data$VisitYear = rep(2017, nrow(temp.data))
+} #Use 2017 Frame Info for trends
 # changed from 2014
 
 i=1
 for (i in 1:nrow(temp.data)){
-print(paste(i, "of", nrow(temp.data)))
+print(paste("Assigning Stratum", i, "of", nrow(temp.data)))
 strat = paste(temp.data$Watershed[i], temp.data$Stratum[i])
 strat
 # Find strata extents and n, repeat for each year since it's
 # a different metric name for each year.  A bit of brute-force
 # programming here that could be streamlined quite a bit.
 
-temp.data$VisitYear
-strat
 
 levels(factor(dbf2011$WS_Strata2011))
 levels(factor(dbf2011$AStrat2011))
@@ -593,17 +383,14 @@ if (temp.data$VisitYear[i] == 2016) {
    strat.dbf = dbf2016[dbf2015$WS_Strata2016 == strat,]}
 
 if (temp.data$VisitYear[i] == 2017) {
-   strat.dbf = dbf2014[dbf2014$WS_Strata2016 == strat,]}
+   strat.dbf = dbf2017[dbf2017$WS_Strata2017 == strat,]}
 
 
 if (temp.data$VisitYear[i] == 2018) {
-   strat.dbf = dbf2014[dbf2014$WS_Strata2016 == strat,]}
+   strat.dbf = dbf2017[dbf2017$WS_Strata2017 == strat,]}
 
 if (temp.data$VisitYear[i] == 2019) {
-   strat.dbf = dbf2014[dbf2014$WS_Strata2016 == strat,]}
-
-
-
+   strat.dbf = dbf2017[dbf2017$WS_Strata2017 == strat,]}
 
    temp.data$Strata.extent[i] = sum(strat.dbf$LengthKM, na.rm=T)
 
@@ -611,8 +398,6 @@ if (temp.data$VisitYear[i] == 2019) {
      (paste(temp.data$Watershed, temp.data$Stratum, temp.data$VisitYear)==
       paste(strat, temp.data$VisitYear[i])))
 }
-
-data.frame(temp.data$wgt, temp.data$VisitYear)
 
 temp.data$wgt = temp.data$Strata.extent / temp.data$Strata.n
 
@@ -626,25 +411,8 @@ if (k==3) {Data_YY_Trend$wgt = temp.data$wgt}
 
 
 
-
-tapply(dbf2011$LengthKM[dbf2011$CHaMPshed=="John Day"], 
- factor( dbf2011$Strata2011[dbf2011$CHaMPshed=="John Day"]), sum)
-
-
-
-## Checks....
-
-
-
-
-#Now set weights to zero for any non-target sites.  This WILL REDUCE the
-#total frame length, as it should
-
-
-year=1
-############################################################
+#
 # cycle through each year, plus one extra time where we'll combine all years
-
 # looping through all the years to get
 # each year, plus an extra each
 # for site mean across years, and site level trend
@@ -653,40 +421,31 @@ year=1
 # Note: if data is missiung in any years, program will crash.
 # if not 2011 data, run from year 2 to n.years +2
 
-
-year=1
-year=2
-year=4
-year
-n.years
-#for (year in 1:n.years) {
 for (year in 1:(n.years+2)){
 
-print(paste("year=", year))
+print(paste("setting eval status.  year=", year))
 
 if (year <= n.years) {
-names(header)
-Eval.File.Name = as.character(header$Evaluation.File.Names[year])
-Eval = read.csv(Eval.File.Name, header=T)
-idx = match(paste(data$SiteName, data$VisitYear), paste(Eval$Site.ID, (year+minyear-1)))
-idx
-for (k in 1:length(idx)){
- if (is.na(idx[k]) ==F) {data$GRTS.Eval.Status[k] = Eval$GRTS.Eval.Status[idx[k]]} 
-}
+	Eval.File.Name = as.character(header$Evaluation.File.Names[year])
+	Eval = read.csv(Eval.File.Name, header=T)
+	idx = match(paste(data$SiteName, data$VisitYear), paste(Eval$Site.ID, (year+minyear-1)))
+
+	for (k in 1:length(idx)){
+	 if (is.na(idx[k]) ==F) {data$GRTS.Eval.Status[k] = Eval$GRTS.Eval.Status[idx[k]]} 
+	}
 }
 
 if (year > n.years) {
-Eval.File.Name = "SITEEVALUATION_AllYears.csv"
-Eval = read.csv(Eval.File.Name, header=T)
-idx = match(Data_Mean$SiteName, Eval$Site.ID)
-idx
-Data_Mean$GRTS.Eval.Status = Eval$GRTS.Eval.Status[idx]
-Data_YY_Trend$GRTS.Eval.Status = Eval$GRTS.Eval.Status[idx]
-}
+	Eval.File.Name = "SITEEVALUATION_AllYears.csv"
+	Eval = read.csv(Eval.File.Name, header=T)
+	idx = match(Data_Mean$SiteName, Eval$Site.ID)
+	Data_Mean$GRTS.Eval.Status = Eval$GRTS.Eval.Status[idx]
+	Data_YY_Trend$GRTS.Eval.Status = Eval$GRTS.Eval.Status[idx]
+	}
 }
 
-
-#data[data$Watershed=="John Day",]
+#Now set weights to zero for any non-target sites.  This WILL REDUCE the
+#total frame length, as it should!
 
 data$wgt[data$GRTS.Eval.Status == "Non-Target"]=0
 Data_Mean$wgt[Data_Mean$GRTS.Eval.Status == "Non-Target"]=0
@@ -694,20 +453,14 @@ Data_YY_Trend$wgt[Data_YY_Trend$GRTS.Eval.Status == "Non-Target"]=0
 
 
 ########################
-
-# Now set wgt to zero for all sites not in the Chinook data frame if we're doing 
-# a Chinook Rollup
-if (header$Subgroup.s.[1]=="AU_Code_CH"){
- data$wgt[data$chnk == "FALSE"] = 0
-  Data_Mean$wgt[Data_Mean$chnk == "FALSE"] = 0
-  Data_YY_Trend$wgt[Data_YY_Trend$chnk == "FALSE"]= 0
-}
-
-
+## Now set wgt to zero for all sites not in the Chinook data frame if we're doing 
+## a Chinook Rollup
+#	if (header$Subgroup.s.[1]=="AU_Code_CH"){
+		# data$wgt[data$chnk == "FALSE"] = 0
+#  		Data_Mean$wgt[Data_Mean$chnk == "FALSE"] = 0
+#  		Data_YY_Trend$wgt[Data_YY_Trend$chnk == "FALSE"]= 0
+#	}
 ##############################################
-
-
-
 
 
 
@@ -719,14 +472,13 @@ if (header$Subgroup.s.[1]=="AU_Code_CH"){
 # just adjusted weights for each metric.
 
 
-################# HERE ####################
-################################################3
+################################################
+################################################
 
 
 
-year=1
+# Again, we go n.years + 2.  The "+2" is for mean and trend.
 for (year in 1:(n.years + 2)) {
-#for (year in 4:(n.years + 2)) {
 
 Results=NULL
 Watershed.Results=NULL
@@ -745,7 +497,6 @@ if (year == (n.years+1)) {
   metrics = Data_YY_Trend}
 }
 
-metrics$WatershedName
 
 ###############################################################
 # Go through metrics one by one, and account for any missing values
@@ -879,6 +630,7 @@ my.subpop
 # which is not part of this script.
 
 cont.data.values = values
+cont.data.values
 
 my.cont.data <- data.frame(siteID=watershed.metrics$SiteName,cont.data.values)   
 colnames(my.cont.data)[2] = metric.name
@@ -1003,11 +755,6 @@ write.csv(Watershed.Results, paste("results files/",outputfile,sep=""))
 
 
 
-#write.csv(Strata.Extents.All.Watersheds2013,"Strata.Extents.All.Watersheds2013.csv")
-
-
-
-# To DO:
 # Write file of adjusted weights corresponding to data, Data_Mean, and Data_YY_Trend
 
 write.csv(data, "Metrics_and_Covariates.csv")

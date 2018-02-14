@@ -1,8 +1,20 @@
+# Format GRTS Results
+# Matt Nahorniak
+# South Fork Research
+#
+# How to Use:
+# First, run CHaMP_Analysis_Automation.R
+# In the same workspace, run this file.  The key outputs are:
+#    Formatted.Results.csv (a spreadsheet containing the key summarized results)
+#    barplots.pdf: a pdf file with barplots for all years/metrics analyzed, as well as tables
+#    Also, in a folder called "boxplots", you can find indivdual .jpg files with
+#    all the barplots included in barplots.pdf
+
+
+
 Results.Formatted=NULL
-Results.Formatted
 library(gridExtra)
 header = read.csv("header.csv", header=T)
-
 
 results.by.year = NULL
 resultsTrend = NULL
@@ -17,7 +29,6 @@ resultsTrend$Year = rep("Linear Trend Across Years", nrow(resultsTrend))
 
 minyear=min(header$Years,na.rm=T)
 fn = paste("c:results files\\CHaMP_", minyear,".csv", sep="")
-fn
 
 results.by.year = read.csv(fn, header=T)
 
@@ -25,8 +36,7 @@ results.by.year = read.csv(fn, header=T)
 # changed 3/17/17
 results.by.year$Year = rep(minyear, nrow(results.by.year))
 
-files
-year
+
   for (year in header$Years[2:length(na.omit(header$Years))]){
     if (paste("CHaMP_",year,".csv",sep="") %in% files)
 {
@@ -39,8 +49,8 @@ year
 
 
 All.Results = rbind(results.by.year, resultsAllYears, resultsTrend)
-All.Results
-All.Results
+# Limit results we want to keep.  We don't want every percentile included
+# in GRTS results.  Keep mean, median, and St Dev.
 All.Results = All.Results[
               ((All.Results$Statistic  == "Mean") |  
                  (All.Results$Statistic=="50Pct") |
@@ -50,12 +60,9 @@ All.Results = All.Results[
 Trend.Results =All.Results[All.Results$Year == "Linear Trend Across Years",]
 Median.Results = All.Results[All.Results$Statistic == "50Pct",]
 Std.Dev.Results = All.Results[All.Results$Statistic == "Std. Deviation",]
-Std.Dev.Results
 
 All.Results =All.Results[All.Results$Statistic  == "Mean",]
 All.Results = All.Results[All.Results$Year != "Linear Trend Across Years",]
-
-
 
 All.Results$sd = rep(NA, nrow(All.Results))
 All.Results$Median = rep(NA, nrow(All.Results))
@@ -85,18 +92,11 @@ trend.sd.idx = match(
     paste(Trend.Results[Trend.Results$Statistic=="Std. Deviation",]$Type, Trend.Results[Trend.Results$Statistic=="Std. Deviation",]$Subpopulation, Trend.Results[Trend.Results$Statistic=="Std. Deviation",]$Indicator))
 
 
-sd.idx
-median.idx
-trend.mean.idx
-trend.sd.idx
-
-
 All.Results$sd= Std.Dev.Results$Estimate[sd.idx]
 All.Results$median= Median.Results$Estimate[median.idx]
 
 All.Results$Trend = Trend.Results[Trend.Results$Statistic=="Mean",]$Estimate[trend.mean.idx]
 All.Results$Trend.sd = Trend.Results[Trend.Results$Statistic=="Std. Deviation",]$Estimate[trend.sd.idx]
-
 
 All.Results$Trend.se = Trend.Results[Trend.Results$Statistic=="Mean",]$StdError[trend.mean.idx]
 All.Results$Trend.lcb = Trend.Results[Trend.Results$Statistic=="Mean",]$LCB95Pct[trend.mean.idx]
@@ -122,13 +122,11 @@ All.Results[is.na(All.Results)] = ""
 ###################################################################################################################
 ###### Big mess just to match original "available" N by subgroups with actual used N by subgroup in spsurvey'
 
-
 M_and_C = read.csv("Metrics_and_Covariates.csv", header=T)
 nrow(M_and_C)
 head(M_and_C)
 M_and_C$VisitNumber
 M_and_C$Watershed
-
 
 names(M_and_C)
 M_and_C$SiteID=M_and_C$SiteName
@@ -160,16 +158,9 @@ Total.sites.by.Stratum.mean
 yearly.sites.all.sites
 Total.sites.all.sites.mean
 all.sites = c(yearly.sites.all.sites, "Average of All Years"=Total.sites.all.sites.mean)
-
 all.watershed = c(yearly.sites.by.watershed, Total.sites.by.watershed.mean)
-all.watershed
 all.valleyclass = c(yearly.sites.by.ValleyClass, Total.sites.by.ValleyClass.mean)
 all.stratum = c(yearly.sites.by.Stratum, Total.sites.by.Stratum.mean)
-all.stratum
-
-
-all.sites
-all.watershed
 
 All.Results$N_CHaMP.Sites = rep(NA, nrow(All.Results))
 
@@ -178,38 +169,22 @@ All.Results$N_CHaMP.Sites[All.Results$Type == "All.Sites"]=
 
 All.Results$N_CHaMP.Sites[All.Results$Type == "Watershed"]= 
    all.watershed[match(paste(All.Results$Year,All.Results$Subpopulation)[All.Results$Type=="Watershed"]
-,names(all.watershed))]
-
-
-names(all.stratum)
-paste(All.Results$Year,All.Results$Subpopulation, sep="")[All.Results$Type=="Stratum"]
-all.stratum
+   ,names(all.watershed))]
 
 All.Results$N_CHaMP.Sites[All.Results$Type == "Stratum"]= all.stratum [match(
 paste(All.Results$Year,All.Results$Subpopulation,sep="")[All.Results$Type=="Stratum"],names(all.stratum))]
-
-
 
 All.Results$N_CHaMP.Sites[All.Results$Type == "ValleyClass"]
 All.Results$N_CHaMP.Sites[All.Results$Type == "Stratum"]
 
 All.Results$N_CHaMP.Sites[All.Results$Type == "ValleyClass"]= all.valleyclass[match(paste(All.Results$Year,All.Results$Subpopulation)[All.Results$Type=="ValleyClass"], names(all.valleyclass))]
 
-
-
 All.Results$N_CHaMP.Sites[All.Results$Type == "ValleyClass"]
 All.Results$N_CHaMP.Sites[All.Results$Type == "Stratum"]
 All.Results$N_CHaMP.Sites[All.Results$Type == "All.Sites"]
 All.Results$N_CHaMP.Sites[All.Results$Type == "Watershed"]
 
-
 ord = order(All.Results$Subpopulation,All.Results$Indicator, All.Results$Year)
-
-
-
-All.Results$Mean
-
-names(All.Results)
 
 #All.Results$Display.Name = header$Display.Name[match(All.Results$Indicator, header$Metric.List)]
 All.Results$Display.Name = All.Results$Indicator
@@ -232,8 +207,6 @@ Results.Formatted = data.frame(
 "Trend.95.PCT5.LCB"  = All.Results$Trend.lcb,
 "Trend.95.PCT.UCB"  = All.Results$Trend.ucb
 )
-Results.Formatted
-
 
 cols=c(1,3,2,5,6,8)
 names(Results.Formatted)
@@ -252,21 +225,14 @@ wsheds =c("Entiat","John Day","Lemhi","Methow", "South Fork Salmon",
 mets = levels(Results.Formatted$Metric)
 met=mets[1]
 for (met in mets){
-met
-bar.data = Results.Formatted[Results.Formatted$Metric == met,]
-bar.data
-
-VY.SP = paste(bar.data$Visit.Year, bar.data$Sub.Population)
-VY.SP
-VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016","2017"),9),
-c(rep("Entiat",7),rep("John Day",7),rep("Lemhi",7),rep("Methow",7),
-rep("South Fork Salmon",7),rep("Tucannon",7),
-rep("Upper Grande Ronde",7),rep("Wenatchee",7),rep("Yankee Fork",7)))
-VY.SP.toMatch
-
+  bar.data = Results.Formatted[Results.Formatted$Metric == met,]
+  VY.SP = paste(bar.data$Visit.Year, bar.data$Sub.Population)
+  VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016","2017"),9),
+    c(rep("Entiat",7),rep("John Day",7),rep("Lemhi",7),rep("Methow",7),
+     rep("South Fork Salmon",7),rep("Tucannon",7),
+     rep("Upper Grande Ronde",7),rep("Wenatchee",7),rep("Yankee Fork",7)))
 
 idx = match(VY.SP.toMatch, VY.SP)
-idx
 #col = c("dark gray","dark gray","dark gray","dark gray",2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,
 #   6,6,6,6,7,7,7,7,"brown","brown","brown","brown","purple","purple","purple","purple")
 
@@ -288,21 +254,17 @@ plot.new()
 title(met,cex.main=2)
 
 ws=wsheds[1]
-ws
 for (ws in wsheds){
 
 par(mar = c(5,5,2,2))
 
-bar.data
 bar.data[bar.data$Sub.Population == ws,]
 
 bar.data.ws = bar.data[idx,][bar.data[idx,]$Sub.Population==ws,]
 bar.data.ws = bar.data.ws[is.na(bar.data.ws$Mean)==F,]
 bar.data.ws
 names=bar.data.ws$Visit.Year
-names
 
-bar.data.ws
 #bar.title=paste(strwrap(met,20),collapse="\n")
 bar.title=met
 col=match(ws, wsheds)
@@ -338,6 +300,7 @@ dev.off()
 
 ##############################################################
 if (1==2) {
+# We don't run this section... but keeping old code for future reference
 # Barplots by Assessment Unit 8/14/2015
 dev.off()
 mets
@@ -404,15 +367,13 @@ lw=2)}
 } # if nrow AU.bar.data > 1
 } # cycle through assessment units
 } # cycle through metrics
-######################
+###############################
 
 
 
 ##############################################################
 # Barplots by Assessment Unit within Watershed Average of all Years, 8/14/2015
 dir.create("AU_Barplots")
-
-
 
 met = mets[1]
 for (met in mets){
@@ -478,11 +439,8 @@ dev.off()
 ######################
 
 } # end of "if 1==2" to not run by assessment unit....
-
-
-
-
-
+#######################################################################
+#######################################################################
 
 
 
@@ -501,12 +459,9 @@ text(0,.5, adj=c(0,0),
 status and trend results for selected CHaMP metrics from 2011-2017, as 
 discussed in the Status and Trend Summary report within the annual CHaMP-
 ISEMP report.  Specific questions or requests for additional information 
-or results summarized at different spatial or temporal scales may be 
-addressed to: 
+may be addressed to South Fork Research: www.southforkresearch.org.
 
-Matt Nahorniak, South Fork Research
-(541)740-5487
-matt@southforkresearch.org
+
 
 "
 )
@@ -517,9 +472,7 @@ for (met in mets){
 
 bar.data = Results.Formatted[Results.Formatted$Metric == met,]
 
-
 VY.SP = paste(bar.data$Visit.Year, bar.data$Sub.Population)
-VY.SP
 VY.SP.toMatch = paste(rep(c("2011","2012","2013","2014","2015","2016","2017"),9),
 c(rep("Entiat",7),rep("John Day",7),rep("Lemhi",7),rep("Methow",7),
 rep("South Fork Salmon",7),rep("Tucannon",7),
