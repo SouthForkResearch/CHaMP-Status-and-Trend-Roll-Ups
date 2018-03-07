@@ -1,6 +1,4 @@
-# README #
-
- # CHaMP Metric Status and Trend Estimation
+# CHaMP Metric Status and Trend Estimation
 ## a.k.a. "GRTS Rollup" 
 
 # Description #
@@ -20,7 +18,6 @@ For CHaMP data analysis, we define status as the distribution of a CHaMP metric 
 Trend is defined as the average of site level linear trend over time, for a give metric, over a specified spatial domain. 
 
 For all sites that contain more than one visit year, we can estimate a linear trend by regressing the metric as measured at each site against time (in years).  Note that, at the site level, there is high uncertainty in a trend estimate made from a regression of either 2 or 5 data points.  These individual site level trend estimates are then analyzed using spsurvey, just as is done for status, as described above, to estimate a distribution of trends across the spatial domain of interest.  Extreme caution should be applied when interpreting estimates of trend, given that only fuve years of data are available.  Small year to year differences may show up as trends, but in reality these “trends” may only reflect short term aberrations year to year, rather than long term linear changes.  With only five years’ of data, it is not possible to distinguish short term year-year aberrations from long term trends. 
-
 
 
 # Required Data Sources #
