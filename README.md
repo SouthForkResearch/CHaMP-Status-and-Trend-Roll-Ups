@@ -7,6 +7,8 @@ This set of R-code files is used to
 * Estimate the components of variance for CHaMP metrics, including measurement noise
 * Generate a set of figures for annual reporting, etc.
 
+Additional background material, presentations, and sample code from a [Generalized Random Tessellation Stratified (GRTS) Design Workshop](Spatially Balanced Survey Designs.md) led by Dr. Don Stevens in 2012 is in the "GRTS Workshop 2012" folder of this repository.  
+
 
 # Overview #
 
