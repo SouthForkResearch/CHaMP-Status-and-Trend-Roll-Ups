@@ -30,9 +30,9 @@ In 2012 the Integrated Status and Effectiveness Monitoring Program provided a fr
 
 #### Section 1.  Overview of GRTS (8:30-10am)
 
-*History and origin of GRTS and overview*
+[*History and origin of GRTS and overview*](GRTS Workshop 2012/Day 1/GRTS_grts_ISEMP.pptx)
 
- 
+
 
 Stratified and variable probability sampling
 
@@ -48,7 +48,7 @@ Weight adjustments
 
 *Introduction to stream network sampling as continuous, discrete or area based samples and the implications of how a response design is set up in these various scenarios* 
 
-Limitations to application of GRTS along linear networks 
+[Limitations to application of GRTS along linear networks](GRTS Workshop 2012/Day 1/Sampling a Stream Network.pptx) 
 
 Specifying objectives: What do you want to estimate?  How does design tie to objectives?
 
