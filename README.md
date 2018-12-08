@@ -21,8 +21,28 @@ Trend is defined as the average of site level linear trend over time, for a give
 
 For all sites that contain more than one visit year, we can estimate a linear trend by regressing the metric as measured at each site against time (in years).  Note that, at the site level, there is high uncertainty in a trend estimate made from a regression of either 2 or 5 data points.  These individual site level trend estimates are then analyzed using spsurvey, just as is done for status, as described above, to estimate a distribution of trends across the spatial domain of interest.  Extreme caution should be applied when interpreting estimates of trend, given that only fuve years of data are available.  Small year to year differences may show up as trends, but in reality these “trends” may only reflect short term aberrations year to year, rather than long term linear changes.  With only five years’ of data, it is not possible to distinguish short term year-year aberrations from long term trends. 
 
+# Required Data Sources (Metadata for 2017)#
 
-# Required Data Sources #
+### CHaMP Frames Shapefile ###
+* Source: Carol Volk
+* filename: MasterFrame_20171216.zip
+
+### Site Decoder
+* Source: Carol Vol
+* This file links the Site Name, Analysis Strata, and Frame Strata together. 
+* filename CHaMP_Visits_Decoder_20171215.xlsx
+
+### Program Metrics File
+* Source: champmonitoring.org data exports tab
+* filename(s): 
+
+### Site evalutions by Year ###
+* Source: champmonitoring.org site evalations tab
+* filename(s): SITEEVALUATION_2011.csv, SITEEVALUATION_2012.csv, etc.
+* Notes: One file required for each year of analysis to be done
+
+-------------------------------------------------------------------------
+# Required Data Sources (Original Metadata for 2015)#
 
 ### Program Metrics database  
 * Source: champmonitoring.org data exports tab
